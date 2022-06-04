@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+    app:
+        container_name: ${APP_NAME}
+        image: ${APP_NAME}:${APP_VERSION}
+        labels: 
+          service.type: app
+          service.name: app
+          service.desc: golang application
+        command: [
+            '/app/server',
+            "--pid",         "app.pid",
+            "--host",        "0.0.0.0",
+            "--port",        "8080",
+            "--prof.host",   "127.0.0.1",
+            "--prof.port",   "8081",
+            "--conf.type",   "env",
+            "--conf.file",   "/app/config/.env",
+            "--log.file",    "/app/log/app.log",
+            "--log.level",   "info",
+            "--storage.dir", "/app/storage"
+        ]
+        ports: 
+            - 9010:8080
+        volumes:
+            - ${DEPLOY_DIR}/log:/app/log
+            - ${DEPLOY_DIR}/config:/app/config
+            - ${DEPLOY_DIR}/storage:/app/storage
+        restart: always 
+  

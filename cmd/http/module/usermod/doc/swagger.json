@@ -1,0 +1,48 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "用户模块接口",
+        "title": "user 模块",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/cmsprovider/v1/message/uploadOffline": {
+            "post": {
+                "description": "上传离线消息",
+                "tags": [
+                    "离线消息"
+                ],
+                "parameters": [
+                    {
+                        "description": "离线消息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userapi.LoginParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "userapi.LoginParam": {
+            "type": "object",
+            "properties": {
+                "phone": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

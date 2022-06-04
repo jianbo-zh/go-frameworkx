@@ -1,0 +1,94 @@
+# copy right by
+# Licenses http://www.apache.org/licenses/LICENSE-2.0
+# more info see https://docs.docker.com/compose/compose-file/ or https://docker.github.io/compose/compose-file/
+version: '3.7'
+networks:
+  default:
+    # Use a custom driver
+    #driver: custom-driver-1
+services:
+  # https://hub.docker.com/r/ipfs/go-ipfs
+#  go-ipfs:
+#    container_name: "go-ipfs"
+#    image: ipfs/go-ipfs:v0.9.0-rc2 # https://hub.docker.com/r/ipfs/go-ipfs/tags?page=1&ordering=last_updated
+#    ports:
+#      - "28410:5001" # api for management ifps http://47.108.166.41:28410
+#      - "28509:4001/tcp" # swarm tcp
+#      - "28509:4001/udp" # swarm udp
+#      - "28502:8080" # gate-way http://47.108.166.41:28502/ifps/[cid]
+#      - "0.0.0.0:24004:4004/tcp" # ws
+#    volumes:
+#      - "./vol/go-ipfs/export:/export"
+#      - "./vol/go-ipfs/data/ipfs:/data/ipfs"
+#     #restart: always # on-failure:3 or unless-stopped default "no"
+## database and catch servers
+  # https://hub.docker.com/_/mysql/
+  Demo-Mysql57:
+    container_name: 'Demo-Mysql57'
+    image: mysql:5.7.27 # https://hub.docker.com/_/mysql/?tab=tags&page=1&ordering=last_updated
+    #image: mysql:5.7.27_fixmode
+    ports:
+      - '0.0.0.0:41212:3306'
+    volumes:
+      - './demo/Mysql57:/var/lib/mysql'
+     # - './demo/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf'
+    environment:
+      MYSQL_ROOT_PASSWORD: '8487c31ea210f03eb0577c4f9f9a01f04d692e0dc6707910c8b0890d10db9841'
+      MYSQL_DATABASE: 'cloud'
+      MYSQL_USER: 'cmsuser'
+      MYSQL_PASSWORD: 'XE8d609r6%HE8*w487e9!'
+    command: [
+      "--default-storage-engine=InnoDB", # default-storage-engine can be Myisam or InnoDB
+      "--max_connections=4000",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci",
+      "--innodb_flush_log_at_trx_commit=1",
+      "--lower_case_table_names=1",
+      "--sync_binlog=1",
+      "--sql_mode=NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION",
+    ]
+    restart: always # on-failure:3 or unless-stopped always default "no"
+  # https://hub.docker.com/r/bitnami/redis/
+  # use https://github.com/bitnami/bitnami-docker-mongodb/issues/103#issuecomment-424833086 fix ubunut error
+  fix-Demo-redis-permissions:
+    container_name: 'Demo-Redis-fix'
+    image: 'bitnami/redis:6.0.1' # https://hub.docker.com/r/bitnami/redis/tags?page=1&ordering=last_updated
+    user: root
+    command: chown -R 1001:1001 /bitnami
+    volumes:
+      - ./demo/redis-demo:/bitnami
+  Demo-Cloud:
+    container_name: 'demo-cloud'
+    image: 'cloud:latest' # local build
+    depends_on:
+      - Demo-Mysql57
+    links:
+      - "Demo-Mysql57:mysql57"
+      - "Demo-Redis:redis6"
+    ports:
+      - '0.0.0.0:27505:17509'
+    restart: always # on-failure:3 or unless-stopped always default "no"
+  Demo-Redis:
+    container_name: 'Demo-Redis'
+    # for fix debian folder error
+    image: 'bitnami/redis:6.0.1'
+    depends_on:
+      - fix-Demo-redis-permissions
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      # - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PASSWORD=732c9047ef0aa5d5e68ba534c31302b0
+      # - REDIS_REPLICATION_MODE=slave
+      # - REDIS_MASTER_HOST=[pwd]
+      # - REDIS_MASTER_PORT_NUMBER=[pwd]
+      # - REDIS_MASTER_PASSWORD=[pwd]
+      - REDIS_EXTRA_FLAGS=--maxmemory 500mb
+    # labels:
+    #   kompose.service.type: nodeport
+    ports:
+      - '127.0.0.1:40011:6379'
+    volumes:
+      - './demo/redis-demo/data:/bitnami/redis/data'
+      - './demo/redis-demo/etc/redis.conf:/opt/bitnami/redis/etc/redis.conf'
+    restart: always # on-failure:3 or unless-stopped always default "no"
+    # log at /var/lib/docker/containers/容器id/local-logs/ https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
